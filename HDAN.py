@@ -55,11 +55,21 @@ class Net(nn.Module):
         self.sub_mean = ops.MeanShift((0.4488, 0.4371, 0.4040), sub=True)
         self.add_mean = ops.MeanShift((0.4488, 0.4371, 0.4040), sub=False)
         self.entry_1 = wn(nn.Conv2d(3, 64, 3, 1, 1))
+        # HDAN like this
         self.blocks = nn.ModuleList([
-            ACAG(64, wn=wn) for _ in range(5)] + [
+            ACAG(64, wn=wn) for _ in range(7)] + [
             ACAG_L(64, wn=wn)]
             )
-        self.agg_fusion = wn(nn.Conv2d(64 * 6, 64, 1, 1, 0))
+        # HDAN-L like this
+        # self.blocks = nn.ModuleList([
+        #     ACAG(64, wn=wn) for _ in range(5)] + [
+        #     ACAG_L(64, wn=wn)]
+        #     )        
+        # HDAN like this
+        self.agg_fusion = wn(nn.Conv2d(64 * 8, 64, 1, 1, 0))
+        # HDAN-L like this
+        # self.agg_fusion = wn(nn.Conv2d(64 * 6, 64, 1, 1, 0))   
+        #     
         self.reduction_0 = ops.BasicConv2d(wn, 64 * 2, 64, 1, 1, 0)
         self.reduction_1 = ops.BasicConv2d(wn, 64 * 4, 64, 1, 1, 0)
         self.reduction_2 = ops.BasicConv2d(wn, 64 * 3, 64, 1, 1, 0)

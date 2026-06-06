@@ -16,7 +16,7 @@ def parse_args() -> argparse.Namespace:
     """解析命令行参数"""
     parser = argparse.ArgumentParser(description="超分模型推理与评估脚本")
     parser.add_argument("--model", type=str, default='HDAN', help="模型名称")
-    parser.add_argument("--ckpt_path", type=str, default='./pretrained_models/HDAN-L_DF2K_X4_500000.pth.tar',
+    parser.add_argument("--ckpt_path", type=str, default='./pretrained_models/HDAN_DF2K_X4_500000.pth.tar',
                         help="模型权重路径")
     parser.add_argument("--group", type=int, default=4, help="模型分组数")
     parser.add_argument("--sample_dir", type=str, default='sample/HDAN_DF2K_X4_500000/Set14',
@@ -53,7 +53,7 @@ def save_image(tensor: torch.Tensor, filename: str) -> None:
 
 def infer_large_image(net: nn.Module, lr: torch.Tensor, cfg: argparse.Namespace) -> torch.Tensor:
     """
-    大图像分块推理（避免OOM）
+    大图像分块推理
     Args:
         net: 超分模型
         lr: 低分辨率图像张量 (C, H, W)
@@ -148,7 +148,7 @@ def setup_output_dirs(cfg: argparse.Namespace, model_name: str) -> Tuple[str, st
     创建输出目录
     Args:
         cfg: 配置参数
-        model_name: 模型名称（从权重路径提取）
+        model_name: 模型名称
     Returns:
         sr_dir: 超分图像保存目录
         hr_dir: 高清图像保存目录
@@ -166,15 +166,15 @@ def setup_output_dirs(cfg: argparse.Namespace, model_name: str) -> Tuple[str, st
 # --------------------- 计算FLOPs和参数量的核心函数 ---------------------
 def calculate_flops_params(net: nn.Module, cfg: argparse.Namespace, device: torch.device) -> Tuple[str, str, str]:
     """
-    计算模型的FLOPs、参数量、Multi-Adds（强制适配scale参数）
+    计算模型的FLOPs、参数量、Multi-Adds
     Args:
         net: 已加载权重的模型
-        cfg: 配置参数（含FLOPs统计用的输入尺寸）
+        cfg: 配置参数
         device: 计算设备
     Returns:
-        flops: 格式化的FLOPs（如 128.50M）
-        params: 格式化的参数量（如 480.00K）
-        madds: 格式化的Multi-Adds（如 64.25M）
+        flops: 格式化的FLOPs
+        params: 格式化的参数量
+        madds: 格式化的Multi-Adds
     """
     # 构建标准输入张量
     input_size = (1, 3, cfg.flops_input_h, cfg.flops_input_w)  # (B, C, H, W)
@@ -214,7 +214,7 @@ def calculate_flops_params(net: nn.Module, cfg: argparse.Namespace, device: torc
 def sample(net: nn.Module, dataset: TestDataset, cfg: argparse.Namespace,
            flops: str, params: str, madds: str) -> None:
     """
-    推理并评估数据集（新增FLOPs参数传递）
+    推理并评估数据集
     Args:
         net: 超分模型
         dataset: 测试数据集
@@ -297,7 +297,7 @@ def sample(net: nn.Module, dataset: TestDataset, cfg: argparse.Namespace,
 
 def warmup_gpu(net: nn.Module, cfg: argparse.Namespace, device: torch.device) -> None:
     """
-    GPU预热（消除初始推理耗时波动）
+    GPU预热
     Args:
         net: 超分模型
         cfg: 配置参数
