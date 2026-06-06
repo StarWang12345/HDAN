@@ -27,3 +27,7 @@ python sample.py
 ```
 ## Citation
 If you find this repository/work helpful in your research, welcome to cite the paper and give a star.
+## Contact
+For any inquiries or collaboration opportunities, please contact the author, Xincheng Wang, at starw1122@outlook.com.
+## Acknowledgements
+We would like to thank all the contributors and supporters of this project.
