@@ -19,6 +19,9 @@ python DIVFIRh5.py
 python train.py
 ```
 ## Testing
+1. Download the five test datasets (Set5, Set14, B100, Urban100, Manga109) from [Google Drive](https://drive.google.com/drive/folders/1lsoyAjsUEyp7gm1t6vZI9j7jr9YzKzcF?usp=sharing) 
+2. Pretrained models have be placed in ./pretrained_models/ folder.
+3. Run test.
 ```
 python sample.py
 ```
