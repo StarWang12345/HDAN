@@ -15,24 +15,23 @@ from thop import profile, clever_format
 def parse_args() -> argparse.Namespace:
     """解析命令行参数"""
     parser = argparse.ArgumentParser(description="超分模型推理与评估脚本")
-    parser.add_argument("--model", type=str, default='CAMnet_v4', help="模型名称")
-    parser.add_argument("--ckpt_path", type=str, default='./checkpoints/loss/0423A_DF2K_XR_CHA_X4_50w_500000.pth.tar',
+    parser.add_argument("--model", type=str, default='HDAN', help="模型名称")
+    parser.add_argument("--ckpt_path", type=str, default='./pretrained_models/HDAN-L_DF2K_X4_500000.pth.tar',
                         help="模型权重路径")
     parser.add_argument("--group", type=int, default=4, help="模型分组数")
-    parser.add_argument("--sample_dir", type=str, default='sample/0423A_DF2K_XR_CHA_X4_50w/Manga109',
+    parser.add_argument("--sample_dir", type=str, default='sample/HDAN_DF2K_X4_500000/Set14',
                         help="结果保存根目录")
-    parser.add_argument("--test_data_dir", type=str, default="./dataset/Manga109/image_SRF_4",
+    parser.add_argument("--test_data_dir", type=str, default="./dataset/Set14/image_SRF_4",
                         help="测试数据集路径")
     parser.add_argument("--scale", type=int, default=4, help="超分放大倍数")
     parser.add_argument("--shave", type=int, default=4, help="图像裁剪边距（避免边界效应）")
-    parser.add_argument("--num_gpu", type=int, default=4, help="GPU数量（预留参数）")
+    parser.add_argument("--num_gpu", type=int, default=4, help="GPU数量")
     parser.add_argument("--warmup_runs", type=int, default=50,
                         help="GPU预热迭代次数（消除初始推理耗时波动）")
     parser.add_argument("--warmup_h", type=int, default=64, help="预热输入图像高度")
     parser.add_argument("--warmup_w", type=int, default=64, help="预热输入图像宽度")
-    # --------------------- 新增FLOPs统计参数 ---------------------
-    parser.add_argument("--flops_input_h", type=int, default=180, help="统计FLOPs用的输入高度（匹配论文标准）")
-    parser.add_argument("--flops_input_w", type=int, default=320, help="统计FLOPs用的输入宽度（匹配论文标准）")
+    parser.add_argument("--flops_input_h", type=int, default=180, help="统计FLOPs用的输入高度")
+    parser.add_argument("--flops_input_w", type=int, default=320, help="统计FLOPs用的输入宽度")
     return parser.parse_args()
 
 
@@ -177,7 +176,7 @@ def calculate_flops_params(net: nn.Module, cfg: argparse.Namespace, device: torc
         params: 格式化的参数量（如 480.00K）
         madds: 格式化的Multi-Adds（如 64.25M）
     """
-    # 构建标准输入张量（batch_size=1，匹配论文统计方式）
+    # 构建标准输入张量
     input_size = (1, 3, cfg.flops_input_h, cfg.flops_input_w)  # (B, C, H, W)
     dummy_input = torch.randn(input_size).to(device)
 
@@ -194,22 +193,18 @@ def calculate_flops_params(net: nn.Module, cfg: argparse.Namespace, device: torc
 
     # 统计FLOPs和参数量
     try:
-        # 兼容写法：移除 ignore_modules，避免版本冲突
-        # 激活函数等轻量级操作的 FLOPs 占比极低，直接统计不影响宏观评估
         flops, params = profile(
             wrapped_net,
             inputs=(dummy_input,),
             verbose=False
         )
     except Exception as e:
-        # 如果 profile 依然失败（极少见），返回默认值避免程序崩溃
         print(f"警告：FLOPs 统计遇到未知错误 ({str(e)})，将返回估算值 0")
         flops, params = 0, 0
 
     # 格式化单位（自动转换 K/M/G）
     flops_formatted, params_formatted = clever_format([flops, params], "%.2f")
 
-    # 换算Multi-Adds（SISR论文通用：Multi-Adds ≈ FLOPs / 2）
     flops_raw = float(flops_formatted[:-1])
     flops_unit = flops_formatted[-1]
     madds_formatted = f"{flops_raw / 2:.2f}{flops_unit}"
@@ -241,7 +236,6 @@ def sample(net: nn.Module, dataset: TestDataset, cfg: argparse.Namespace,
     # 提取模型名称
     model_name = os.path.splitext(os.path.basename(cfg.ckpt_path))[0]
 
-    # 打印FLOPs/参数量信息（仅打印一次）
     print("\n=== 模型计算量统计 ===")
     print(f"参数量 (Params): {params}")
     print(f"浮点运算量 (FLOPs): {flops}")
