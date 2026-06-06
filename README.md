@@ -25,6 +25,7 @@ python train.py
 ```
 python sample.py
 ```
+The output results will be sorted in ../sample/ckpt_name
 ## Citation
 If you find this repository/work helpful in your research, welcome to cite the paper and give a star.
 ## Contact
